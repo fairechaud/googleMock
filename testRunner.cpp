@@ -36,102 +36,39 @@ MockDatabaseConnection::MockDatabaseConnection(std::string serverAddress) : IDat
 {
 
 }
+/*
+    MATCHERS are used to verify that a method was called WITH A PARTICULAR set of parameters
 
-ACTION(myThrow)
-{
-    std::cout << "This is error action\n";
-    throw std::runtime_error("Dummy error");
-}
+    Examples:
+    * Exact value
+    EXPECT_CALL(someObject, someMethod(5,"Hello"));
+    * Argument </>
+    EXPECT_CALL(someObject, someMethod(Gt(5)));
+    * Other matchers : 
+        Similarity : Ge,Lt,Le,Eq
+        Anything : _
+        IsNull/IsNotNull
+        String: HasSubstr("substring")
 
-TEST(TestEmployeeManager, TestConnectionError)
-{
-    MockDatabaseConnection dbConnection("DummyAddress");
-    EXPECT_CALL(dbConnection, connect()).WillOnce(Throw(std::runtime_error("Dummy error")));
-    //EXPECT_CALL(dbConnection, disconnect());
-
-    ASSERT_THROW(EmployeeManager employeeManager(&dbConnection), std::runtime_error);
-}
-
-TEST(TestEmployeeManager, TestConnectionErrorWithAction)
-{
-    MockDatabaseConnection dbConnection("DummyAddress");
-    EXPECT_CALL(dbConnection, connect()).WillOnce(myThrow());
-
-    ASSERT_THROW(EmployeeManager employeeManager(&dbConnection), std::runtime_error);
-}
-
-TEST(TestEmployeeManager, TestConnectionErrorLambdaInvoke)
-{
-    MockDatabaseConnection dbConnection("DummyAddress");
-    EXPECT_CALL(dbConnection, connect()).WillOnce(Invoke(
-        [](){
-            std::cout << "This is lambda error invoke\n";
-            throw std::runtime_error("Dummy error");
-        }
-    ));
-
-    ASSERT_THROW(EmployeeManager employeeManager(&dbConnection), std::runtime_error);
-}
-
-TEST(TestEmployeeManager, TestConnectionErrorMemberFunctionInvoke)
-{
-    MockDatabaseConnection dbConnection("DummyAddress");
-    auto boundMethod = std::bind(&MockDatabaseConnection::memberMethodForConnectionError, &dbConnection);
-    EXPECT_CALL(dbConnection, connect()).WillOnce(InvokeWithoutArgs(
-        boundMethod
-    ));
-
-    ASSERT_THROW(EmployeeManager employeeManager(&dbConnection), std::runtime_error);
-}
-
-
-TEST(TestEmployeeManager, TestConnection)
-{
-    MockDatabaseConnection dbConnection("dummyConnection");
-    EXPECT_CALL(dbConnection, connect());
-    EXPECT_CALL(dbConnection, disconnect());
-
-    EmployeeManager employeeManager(&dbConnection);
-}
-
-TEST(TestEmployeeManager, TestUpdateSalary)
-{
-    MockDatabaseConnection dbConnection("dummyConnection");
-    EXPECT_CALL(dbConnection, connect());
-    EXPECT_CALL(dbConnection, disconnect());
-    EXPECT_CALL(dbConnection, updateSalary(_,_)).Times(1);   
-
-    EmployeeManager employeeManager(&dbConnection);
-
-    employeeManager.setSalary(50, 6000);
-}
-
-TEST(TestEmployeeManager, TestGetSalary)
-{
-    const int employeeId = 50;
-    const float salary = 6100.0;
-    MockDatabaseConnection dbConnection("dummyConnection");
-    EXPECT_CALL(dbConnection, connect());
-    EXPECT_CALL(dbConnection, disconnect());
-    EXPECT_CALL(dbConnection, getSalary(_)).Times(1).WillOnce(Return(salary));
-
-    EmployeeManager employeeManager(&dbConnection);
-
-    float returnedSalary = employeeManager.getSalary(employeeId);
-
-    ASSERT_EQ(salary, returnedSalary);
-}
-
+    They can be chained together:
+    EXPECT_CALL(someObject, someMethod(AllOf(Gt(5),Le(100),Not(7))));
+    The evaluation above expects something >5, <= 100 and != 7 all at the same time
+    AnyOf() can be used to meet at least one matchers
+    Matchers can also be used with ASSERT_THAT
+*/
 TEST(TestEmployeeManager, TestGetSalaryInRange)
 {
     const int low = 5000, high = 8000;
+    // Create a dummy vector of 3 employees are input to method
     std::vector<Employee> returnedVector{Employee{1, 5600, "John"},
                                     Employee{2, 7000, "Jane"},
                                     Employee{3, 6600, "Alex"}};
 
     MockDatabaseConnection dbConnection("dummyConnection");
+    //Standard constructor/destructor calls
     EXPECT_CALL(dbConnection, connect());
     EXPECT_CALL(dbConnection, disconnect());
+    // Method called with dummy vector
     EXPECT_CALL(dbConnection, getSalariesRange(low, high)).WillOnce(Return(returnedVector));
 
     EmployeeManager employeeManager(&dbConnection);
