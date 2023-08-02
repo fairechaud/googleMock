@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-set(CMAKE_CXX_STANDARD 11)
+project(GoogleMockProject)
 
 find_package(GTest REQUIRED)
 message("GTEST_INCLUDE_DIRS = ${GTEST_INCLUDE_DIRS}")
@@ -18,6 +18,6 @@ add_executable(testRunner testRunner.cpp)
 target_link_libraries(testRunner 
     ${GTEST_LIBRARIES} 
     ${GMOCK_LIBRARIES} 
-    pthread 
-    ${ACTUAL_LIBRARIES})
+    ${ACTUAL_LIBRARIES}
+    pthread)
 

@@ -8,6 +8,7 @@
 #include "Employee.hpp"
 #include "EmployeeManager.hpp"
 
+using namespace testing;
 
 class MockDatabaseConnection : public IDatabaseConnection
 {
@@ -24,12 +25,65 @@ public:
     MOCK_CONST_METHOD1(getSalariesRange, std::vector<Employee>(float));
     MOCK_CONST_METHOD2(getSalariesRange, std::vector<Employee>(float, float));
 
+    void memberMethodForConnectionError()
+    {
+        std::cout << "This is member function\n";
+        throw std::runtime_error("Dummy error");
+    }
 };
 
 MockDatabaseConnection::MockDatabaseConnection(std::string serverAddress) : IDatabaseConnection(serverAddress)
 {
 
 }
+
+ACTION(myThrow)
+{
+    std::cout << "This is error action\n";
+    throw std::runtime_error("Dummy error");
+}
+
+TEST(TestEmployeeManager, TestConnectionError)
+{
+    MockDatabaseConnection dbConnection("DummyAddress");
+    EXPECT_CALL(dbConnection, connect()).WillOnce(Throw(std::runtime_error("Dummy error")));
+    //EXPECT_CALL(dbConnection, disconnect());
+
+    ASSERT_THROW(EmployeeManager employeeManager(&dbConnection), std::runtime_error);
+}
+
+TEST(TestEmployeeManager, TestConnectionErrorWithAction)
+{
+    MockDatabaseConnection dbConnection("DummyAddress");
+    EXPECT_CALL(dbConnection, connect()).WillOnce(myThrow());
+
+    ASSERT_THROW(EmployeeManager employeeManager(&dbConnection), std::runtime_error);
+}
+
+TEST(TestEmployeeManager, TestConnectionErrorLambdaInvoke)
+{
+    MockDatabaseConnection dbConnection("DummyAddress");
+    EXPECT_CALL(dbConnection, connect()).WillOnce(Invoke(
+        [](){
+            std::cout << "This is lambda error invoke\n";
+            throw std::runtime_error("Dummy error");
+        }
+    ));
+
+    ASSERT_THROW(EmployeeManager employeeManager(&dbConnection), std::runtime_error);
+}
+
+TEST(TestEmployeeManager, TestConnectionErrorMemberFunctionInvoke)
+{
+    MockDatabaseConnection dbConnection("DummyAddress");
+    auto boundMethod = std::bind(&MockDatabaseConnection::memberMethodForConnectionError, &dbConnection);
+    EXPECT_CALL(dbConnection, connect()).WillOnce(InvokeWithoutArgs(
+        boundMethod
+    ));
+
+    ASSERT_THROW(EmployeeManager employeeManager(&dbConnection), std::runtime_error);
+}
+
 
 TEST(TestEmployeeManager, TestConnection)
 {
@@ -45,7 +99,7 @@ TEST(TestEmployeeManager, TestUpdateSalary)
     MockDatabaseConnection dbConnection("dummyConnection");
     EXPECT_CALL(dbConnection, connect());
     EXPECT_CALL(dbConnection, disconnect());
-    EXPECT_CALL(dbConnection, updateSalary(testing::_, testing::_)).Times(1);   
+    EXPECT_CALL(dbConnection, updateSalary(_,_)).Times(1);   
 
     EmployeeManager employeeManager(&dbConnection);
 
@@ -59,7 +113,7 @@ TEST(TestEmployeeManager, TestGetSalary)
     MockDatabaseConnection dbConnection("dummyConnection");
     EXPECT_CALL(dbConnection, connect());
     EXPECT_CALL(dbConnection, disconnect());
-    EXPECT_CALL(dbConnection, getSalary(testing::_)).Times(1).WillOnce(testing::Return(salary));
+    EXPECT_CALL(dbConnection, getSalary(_)).Times(1).WillOnce(Return(salary));
 
     EmployeeManager employeeManager(&dbConnection);
 
@@ -78,7 +132,7 @@ TEST(TestEmployeeManager, TestGetSalaryInRange)
     MockDatabaseConnection dbConnection("dummyConnection");
     EXPECT_CALL(dbConnection, connect());
     EXPECT_CALL(dbConnection, disconnect());
-    EXPECT_CALL(dbConnection, getSalariesRange(low, high)).WillOnce(testing::Return(returnedVector));
+    EXPECT_CALL(dbConnection, getSalariesRange(low, high)).WillOnce(Return(returnedVector));
 
     EmployeeManager employeeManager(&dbConnection);
 
@@ -87,12 +141,12 @@ TEST(TestEmployeeManager, TestGetSalaryInRange)
     for(auto it=returnedMap.begin(); it!=returnedMap.end(); ++it)
     {
         std::cout << it->first << " " << it->second << '\n';
-        ASSERT_THAT(it->second, testing::AnyOf(testing::Gt(low), testing::Lt(high-3000)));
+        ASSERT_THAT(it->second, AnyOf(Gt(low), Lt(high-3000)));
     }
 }
 
 int main(int argc, char **argv)
 {
- ::testing::InitGoogleTest(&argc, argv);
- return RUN_ALL_TESTS();
+    InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }
