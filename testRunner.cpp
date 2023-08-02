@@ -10,6 +10,24 @@
 
 using namespace testing;
 
+/*
+    Mocks can be used to isolate the test.
+
+    Mocked methods have empty implementations.
+
+    They can be used to control the behaviour of certain methods, like: returning a certain result, calling another method, throwing exceptions.
+
+    Mocks can be used for collaboration tests. That means you can test that method A called method B, with what parameters, and so on
+
+    Matchers can be used for matching parameters. Special matchers are "_" (anything) or the exact value ("Exactly").
+
+    Other matchers usually found: Gt( greater than), Ge(greater or equal), Lt(lower than), Le(lower or equal).
+
+    There are special matchers for strings.
+
+    Matchers can be used in assertions on vectors.
+*/
+
 class MockDatabaseConnection : public IDatabaseConnection
 {
 public:
