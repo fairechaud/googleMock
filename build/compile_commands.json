@@ -1,0 +1,17 @@
+[
+{
+  "directory": "/home/frodr178/Documents/projects/googleMock/build",
+  "command": "/usr/bin/c++   -g -o CMakeFiles/commonLibrary.dir/LibraryCode.cpp.o -c /home/frodr178/Documents/projects/googleMock/LibraryCode.cpp",
+  "file": "/home/frodr178/Documents/projects/googleMock/LibraryCode.cpp"
+},
+{
+  "directory": "/home/frodr178/Documents/projects/googleMock/build",
+  "command": "/usr/bin/c++   -g -o CMakeFiles/mainApp.dir/main.cpp.o -c /home/frodr178/Documents/projects/googleMock/main.cpp",
+  "file": "/home/frodr178/Documents/projects/googleMock/main.cpp"
+},
+{
+  "directory": "/home/frodr178/Documents/projects/googleMock/build",
+  "command": "/usr/bin/c++   -g -o CMakeFiles/unitTestRunner.dir/testRunner.cpp.o -c /home/frodr178/Documents/projects/googleMock/testRunner.cpp",
+  "file": "/home/frodr178/Documents/projects/googleMock/testRunner.cpp"
+}
+]

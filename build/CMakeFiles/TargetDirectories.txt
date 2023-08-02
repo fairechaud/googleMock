@@ -1,0 +1,5 @@
+/home/frodr178/Documents/projects/googleMock/build/CMakeFiles/commonLibrary.dir
+/home/frodr178/Documents/projects/googleMock/build/CMakeFiles/mainApp.dir
+/home/frodr178/Documents/projects/googleMock/build/CMakeFiles/unitTestRunner.dir
+/home/frodr178/Documents/projects/googleMock/build/CMakeFiles/edit_cache.dir
+/home/frodr178/Documents/projects/googleMock/build/CMakeFiles/rebuild_cache.dir
