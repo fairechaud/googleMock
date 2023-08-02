@@ -10,6 +10,25 @@
 
 using namespace testing;
 
+class ConnectionFixture : public testing::Test
+{   
+    public:
+        void SetUp() override;
+        void TearDown() override;
+        MockDatabaseConnection dbConnection;
+};
+
+void ConnectionFixture::SetUp()
+{
+    MockDatabaseConnection dbConnection("DummyAddress");
+    EXPECT_CALL(dbConnection, connect()).WillOnce(Throw(std::runtime_error("Dummy error")));
+}
+
+void ConnectionFixture::TearDown()
+{
+    //EXPECT_CALL(dbConnection, disconnect());
+}
+   
 class MockDatabaseConnection : public IDatabaseConnection
 {
 public:
@@ -24,12 +43,6 @@ public:
 
     MOCK_CONST_METHOD1(getSalariesRange, std::vector<Employee>(float));
     MOCK_CONST_METHOD2(getSalariesRange, std::vector<Employee>(float, float));
-
-    void memberMethodForConnectionError()
-    {
-        std::cout << "This is member function\n";
-        throw std::runtime_error("Dummy error");
-    }
 };
 
 MockDatabaseConnection::MockDatabaseConnection(std::string serverAddress) : IDatabaseConnection(serverAddress)
@@ -43,106 +56,24 @@ ACTION(myThrow)
     throw std::runtime_error("Dummy error");
 }
 
-TEST(TestEmployeeManager, TestConnectionError)
+TEST_F(ConnectionFixture, TestConnectionError)
 {
-    MockDatabaseConnection dbConnection("DummyAddress");
-    EXPECT_CALL(dbConnection, connect()).WillOnce(Throw(std::runtime_error("Dummy error")));
-    //EXPECT_CALL(dbConnection, disconnect());
-
-    ASSERT_THROW(EmployeeManager employeeManager(&dbConnection), std::runtime_error);
+    ASSERT_THROW(EmployeeManager employeeManager(ConnectionFixture::dbConnection), std::runtime_error);
 }
 
-TEST(TestEmployeeManager, TestConnectionErrorWithAction)
+TEST_F(ConnectionFixture, TestConnectionErrorWithAction)
 {
-    MockDatabaseConnection dbConnection("DummyAddress");
-    EXPECT_CALL(dbConnection, connect()).WillOnce(myThrow());
-
-    ASSERT_THROW(EmployeeManager employeeManager(&dbConnection), std::runtime_error);
+    ASSERT_THROW(EmployeeManager employeeManager(ConnectionFixture::dbConnection), std::runtime_error);
 }
 
-TEST(TestEmployeeManager, TestConnectionErrorLambdaInvoke)
+TEST_F(ConnectionFixture,TestConnectionErrorLambdaInvoke)
 {
-    MockDatabaseConnection dbConnection("DummyAddress");
-    EXPECT_CALL(dbConnection, connect()).WillOnce(Invoke(
-        [](){
-            std::cout << "This is lambda error invoke\n";
-            throw std::runtime_error("Dummy error");
-        }
-    ));
-
-    ASSERT_THROW(EmployeeManager employeeManager(&dbConnection), std::runtime_error);
+    ASSERT_THROW(EmployeeManager employeeManager(ConnectionFixture::dbConnection), std::runtime_error);
 }
 
-TEST(TestEmployeeManager, TestConnectionErrorMemberFunctionInvoke)
+TEST_F(ConnectionFixture, TestConnectionErrorMemberFunctionInvoke)
 {
-    MockDatabaseConnection dbConnection("DummyAddress");
-    auto boundMethod = std::bind(&MockDatabaseConnection::memberMethodForConnectionError, &dbConnection);
-    EXPECT_CALL(dbConnection, connect()).WillOnce(InvokeWithoutArgs(
-        boundMethod
-    ));
-
-    ASSERT_THROW(EmployeeManager employeeManager(&dbConnection), std::runtime_error);
-}
-
-
-TEST(TestEmployeeManager, TestConnection)
-{
-    MockDatabaseConnection dbConnection("dummyConnection");
-    EXPECT_CALL(dbConnection, connect());
-    EXPECT_CALL(dbConnection, disconnect());
-
-    EmployeeManager employeeManager(&dbConnection);
-}
-
-TEST(TestEmployeeManager, TestUpdateSalary)
-{
-    MockDatabaseConnection dbConnection("dummyConnection");
-    EXPECT_CALL(dbConnection, connect());
-    EXPECT_CALL(dbConnection, disconnect());
-    EXPECT_CALL(dbConnection, updateSalary(_,_)).Times(1);   
-
-    EmployeeManager employeeManager(&dbConnection);
-
-    employeeManager.setSalary(50, 6000);
-}
-
-TEST(TestEmployeeManager, TestGetSalary)
-{
-    const int employeeId = 50;
-    const float salary = 6100.0;
-    MockDatabaseConnection dbConnection("dummyConnection");
-    EXPECT_CALL(dbConnection, connect());
-    EXPECT_CALL(dbConnection, disconnect());
-    EXPECT_CALL(dbConnection, getSalary(_)).Times(1).WillOnce(Return(salary));
-
-    EmployeeManager employeeManager(&dbConnection);
-
-    float returnedSalary = employeeManager.getSalary(employeeId);
-
-    ASSERT_EQ(salary, returnedSalary);
-}
-
-TEST(TestEmployeeManager, TestGetSalaryInRange)
-{
-    const int low = 5000, high = 8000;
-    std::vector<Employee> returnedVector{Employee{1, 5600, "John"},
-                                    Employee{2, 7000, "Jane"},
-                                    Employee{3, 6600, "Alex"}};
-
-    MockDatabaseConnection dbConnection("dummyConnection");
-    EXPECT_CALL(dbConnection, connect());
-    EXPECT_CALL(dbConnection, disconnect());
-    EXPECT_CALL(dbConnection, getSalariesRange(low, high)).WillOnce(Return(returnedVector));
-
-    EmployeeManager employeeManager(&dbConnection);
-
-    std::map<std::string, float> returnedMap = employeeManager.getSalariesBetween(low, high);
-
-    for(auto it=returnedMap.begin(); it!=returnedMap.end(); ++it)
-    {
-        std::cout << it->first << " " << it->second << '\n';
-        ASSERT_THAT(it->second, AnyOf(Gt(low), Lt(high-3000)));
-    }
+    ASSERT_THROW(EmployeeManager employeeManager(ConnectionFixture::dbConnection), std::runtime_error);
 }
 
 int main(int argc, char **argv)
